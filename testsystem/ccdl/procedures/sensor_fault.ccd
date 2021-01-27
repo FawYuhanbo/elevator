@@ -1,0 +1,31 @@
+ccd
+initial conditions:
+{
+	CTRL.initRelayMatrix ()
+
+	// Reset elevator to level 0
+	set CTRL_DO_RESET to ON for 200 [ms]
+	wait 1 [s]
+	wait until CTRL_AI_ERROR_MODE = 0
+}
+
+test step 1:
+{
+
+	// Drive elevator to level 2
+	set CTRL_DO_FLOOR_LEVEL_2_BUTTON to ON for 200 [ms]
+		
+	set trigger FAILURE_INJECT after 4 [s]
+
+	// Disconnect level 2 sensor pin
+	after FAILURE_INJECT:
+		disconnect pin SRM.FLOOR_LEVEL_[0;1]_SENSOR+ for 200 [ms]
+
+	// Check for maintenance mode
+	within FAILURE_INJECT & 0.5 [s] .. FAILURE_INJECT & 2.5 [s]: {
+		expect 8 transitions of CTRL_DI_FLOOR_LEVEL_[0;1;2]_LIGHT
+	}
+
+	wait 10 [s]
+}
+end of ccd
